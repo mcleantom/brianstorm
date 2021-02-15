@@ -19,24 +19,23 @@ def load_data():
     data_y = data["esrb_rating"]
     data_x = data.drop("esrb_rating", axis=1)
 
-    #data_y = to_categorical(data_y)
+    data_y = to_categorical(data_y)
     
     train_x, val_x, train_y, val_y = split_data(data_x, data_y)
 
-    return train_x, val_x, train_y, val_y
+    return train_x, val_x, train_y, val_y, ESRB_rating
 
 
 def split_data(data_x, data_y):
     train_x, val_x, train_y, val_y = train_test_split(data_x, data_y,
-                                                      test_size=0.2,
-                                                      random_state=42)
+                                                      test_size=0.1,
+                                                      random_state=25)                                            
 
-    return train_x, val_x, train_y, val_y
+    return train_x, val_x,  train_y, val_y
 
 
-def load_test_data():
+def load_test_data(ESRB_rating):
     data = pd.read_csv("data/test_esrb.csv")
-    ESRB_rating = data.esrb_rating.unique().tolist()
     data.esrb_rating = data.esrb_rating.map(lambda x: ESRB_rating.index(x))
     data = data.drop("title", axis=1)
     data_y = data["esrb_rating"]

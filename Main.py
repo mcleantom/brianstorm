@@ -6,22 +6,25 @@ from data_loader import load_data, load_test_data
 from keras.callbacks import EarlyStopping
 from plotting import plot_training
 from sklearn.metrics import classification_report
-from keras.metrics import sparse_categorical_accuracy
+from keras.metrics import categorical_accuracy
 
 class SickModel:
 
     def createModel(self, input_shape, output_shape):
         self.model = Sequential([
                 layers.Input(shape=input_shape),
-                layers.Dense(100, activation="relu"),
+                layers.Dropout(0.1),
+                layers.Dense(200, activation="elu"),
+                layers.Dense(100, activation="selu"),
                 layers.Dense(50, activation="relu"),
-                layers.Dense(25, activation="relu"),
+                layers.Dense(25, activation="elu"),
+                layers.Dense(10, activation="selu"),
                 layers.Dense(output_shape, activation="softmax")
             ])
 
         self.model.compile(optimizer="sgd",
-                           loss="sparse_categorical_crossentropy",
-                           metrics=[sparse_categorical_accuracy])
+                           loss="categorical_crossentropy",
+                           metrics=[categorical_accuracy])
 
     def trainModel(self, train_x, train_y, val_x, val_y, epochs, batch_size):
         es = EarlyStopping(monitor='val_loss', mode='min', verbose=1, patience=50)
@@ -34,18 +37,19 @@ class SickModel:
                                       callbacks = callbacks)
 
 
-EPOCHS = 500
-BATCH_SIZE = 50
+EPOCHS = 2000
+BATCH_SIZE = 500
 
-train_x, val_x, train_y, val_y = load_data()
+train_x, val_x, train_y, val_y, ESRB_rating = load_data()
 dim_input_shape = train_x.shape[1]
-dim_output_shape = len(train_y.unique())
+#dim_output_shape = len(train_y.unique())
+dim_output_shape = train_y.shape[1]
 
 model = SickModel()
 model.createModel(dim_input_shape, dim_output_shape)
 model.trainModel(train_x, train_y, val_x, val_y, EPOCHS, BATCH_SIZE)
-plot_training(model.history)
-test_x, test_y = load_test_data()
+
+test_x, test_y = load_test_data(ESRB_rating)
 
 y_pred = model.model.predict(test_x)
 y_pred = np.argmax(y_pred, axis=1)
@@ -55,3 +59,5 @@ print(test_y[:10])
 print(y_pred[:10])
 
 print(classification_report(test_y, y_pred))
+
+plot_training(model.history)
