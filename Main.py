@@ -13,18 +13,13 @@ class SickModel:
     def createModel(self, input_shape, output_shape):
         self.model = Sequential([
                 layers.Input(shape=input_shape),
-                layers.Dropout(0.1),
-                layers.Dense(200, activation="elu"),
-                layers.Dense(100, activation="selu"),
-                layers.Dense(50, activation="relu"),
-                layers.Dense(25, activation="elu"),
-                layers.Dense(10, activation="selu"),
+                layers.Dropout(0.2),
+                layers.Dense(200, activation="relu"),
                 layers.Dense(output_shape, activation="softmax")
             ])
 
         self.model.compile(optimizer="sgd",
-                           loss="categorical_crossentropy",
-                           metrics=[categorical_accuracy])
+                           loss="categorical_crossentropy")
 
     def trainModel(self, train_x, train_y, val_x, val_y, epochs, batch_size):
         es = EarlyStopping(monitor='val_loss', mode='min', verbose=1, patience=50)
