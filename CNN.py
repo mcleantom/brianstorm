@@ -18,16 +18,16 @@ class Network:
 
     def CreateNetwork(self):
         self.model = Sequential([
-                layers.Conv2D(64,kernel_size=3, activation='relu', input_shape=(600,600, 1)),
+                layers.Conv2D(64,kernel_size=3, activation='relu', input_shape=(256,256, 1)),
                 layers.Conv2D(32, kernel_size=3, activation='relu'),
                 layers.Flatten(),
-                layers.Dense(10, activation="softmax")
+                layers.Dense(6, activation="softmax")
         ])
         self.model.compile(optimizer='adam', loss='categorical_crossentropy')
 
     def Train(self, X, y, X_v, y_v):
         callback = EarlyStopping(patience=2)
-        self.model.fit(X, y, epochs=15, batch_size=10, verbose = True ,callbacks=[callback], validation_data = (X_v, y_v))
+        self.history = self.model.fit(X, y, epochs=1000, batch_size=50, verbose = True ,callbacks=[callback], validation_data = (X_v, y_v))
 
 def loadImages():
     path = '../Data/Chess'
@@ -40,10 +40,10 @@ def loadImages():
     allImageTypes = [val for sublist in allImageTypes for val in sublist]
     print(len(allImageFiles))
     images = list(map(lambda im : Image.open(im).convert("L"), allImageFiles))
-    images = list(map(lambda im : im.resize((600,600)), images))
+    images = list(map(lambda im : im.resize((256,256)), images))
     imageList = zip(allImageTypes, images)
     return list(imageList)
-
+ 
 def splitData(imageList):
     length = len(imageList)
     
@@ -63,10 +63,11 @@ def Uniques(DataList):
 
 def vectorize(DataList, uniques):
     X = np.array([np.array(x) for (_, x) in DataList])
+    X = X.reshape([*X.shape, 1])
     y = ([y for (y, _) in DataList])
    
     y = np.array(list(map(lambda n : uniques.index(n), y)))
-    y = to_categorical(y)
+    y = to_categorical(y, num_classes=len(uniques))
     #X = pd.DataFrame (X, columns=['Image'])
     #y = pd.DataFrame (y, columns=['Type'])
     return X, y
@@ -83,3 +84,4 @@ X_t, y_t = vectorize(testList, uniques)
 
 network = Network()
 network.Train(X, y, X_v, y_v)
+plot_training(network.history)
