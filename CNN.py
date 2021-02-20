@@ -9,7 +9,7 @@ from sklearn.metrics import classification_report
 from keras.metrics import categorical_accuracy
 from keras.utils import to_categorical
 import PIL
-from PIL import Image
+from PIL import Image, ImageFilter
 import tensorflow as tf
 
 class Network:
@@ -18,16 +18,19 @@ class Network:
 
     def CreateNetwork(self):
         self.model = Sequential([
-                layers.Conv2D(64,kernel_size=3, activation='relu', input_shape=(256,256, 1)),
-                layers.Conv2D(32, kernel_size=3, activation='relu'),
+                layers.Conv2D(64, kernel_size=(8,8), strides=(4,4), activation='relu', input_shape=(256,256, 1)),
+                layers.Conv2D(32, kernel_size=(4,4), strides=(2,2), activation='relu'),
+                layers.Conv2D(32, kernel_size=(3,3), activation="relu"),
                 layers.Flatten(),
+                layers.Dense(512, activation="relu"),
+                layers.Dense(250, activation="relu"),
                 layers.Dense(6, activation="softmax")
         ])
         self.model.compile(optimizer='adam', loss='categorical_crossentropy')
 
     def Train(self, X, y, X_v, y_v):
-        callback = EarlyStopping(patience=2)
-        self.history = self.model.fit(X, y, epochs=1000, batch_size=50, verbose = True ,callbacks=[callback], validation_data = (X_v, y_v))
+        callback = []  # EarlyStopping(patience=2)
+        self.history = self.model.fit(X, y, epochs=100, batch_size=80, verbose = True ,callbacks=callback, validation_data = (X_v, y_v))
 
 def loadImages():
     path = '../Data/Chess'
@@ -39,7 +42,7 @@ def loadImages():
     allImageFiles = [val for sublist in allImageFiles for val in sublist]
     allImageTypes = [val for sublist in allImageTypes for val in sublist]
     print(len(allImageFiles))
-    images = list(map(lambda im : Image.open(im).convert("L"), allImageFiles))
+    images = list(map(lambda im : Image.open(im).convert("1").filter(ImageFilter.MedianFilter(3)), allImageFiles))
     images = list(map(lambda im : im.resize((256,256)), images))
     imageList = zip(allImageTypes, images)
     return list(imageList)
